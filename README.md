@@ -58,9 +58,14 @@ dotnet build AnimalManager.sln -c Release
 # -> produces Releases/animalmanager_0.1.0.zip (self-contained MSBuild zip target, no Cake needed)
 ```
 
-Drop that zip into `VintagestoryData/Mods/`, or use the **Client** run profile
-(`launchSettings.json`) which loads the freshly built dll+assets via `--addModPath` — no
-zipping required for iteration.
+Loading options (the mod info is embedded in the assembly via `Properties/AssemblyInfo.cs`,
+so a bare DLL is enough):
+- **Simplest:** drop `AnimalManager/bin/Release/animalmanager.dll` straight into
+  `VintagestoryData/Mods/`. No `modinfo.json` needed next to it — it is baked into the DLL.
+- **Packaged:** drop `Releases/animalmanager_0.1.0.zip` (dll + modinfo.json + assets) into
+  `VintagestoryData/Mods/`.
+- **Dev iteration:** use the **Client** run profile (`launchSettings.json`, `--addModPath`) —
+  no zipping between edits.
 
 > If you prefer the canonical Mod-DB publishing flow, you can also scaffold with
 > `dotnet new vsmod --AddSolutionFile -o AnimalManager` and drop `src/`, `modinfo.json`, and
