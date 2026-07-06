@@ -1,0 +1,15 @@
+{
+  "type": "code",
+  "modid": "animalmanager",
+  "name": "Animal Manager",
+  "authors": [ "GoodApollo32" ],
+  "description": "A herd overview panel. Open one window to see every captive animal near you and their husbandry stats at a glance (health, hunger, weight, generation, breeding, milk/egg timers). Toggle which stats are shown.",
+  "version": "0.1.0",
+  "side": "Client",
+  "requiredOnClient": true,
+  "requiredOnServer": false,
+  "dependencies": {
+    "game": "",
+    "survival": ""
+  }
+}

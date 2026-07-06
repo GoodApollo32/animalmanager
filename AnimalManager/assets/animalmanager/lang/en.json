@@ -1,0 +1,17 @@
+{
+	"animalmanager:hotkey": "Open Animal Manager",
+	"animalmanager:dialog-title": "Animal Manager",
+	"animalmanager:command-desc": "Toggle the Animal Manager herd overview window.",
+
+	"animalmanager:col-health": "Health",
+	"animalmanager:col-hunger": "Hunger",
+	"animalmanager:col-weight": "Weight",
+	"animalmanager:col-stage": "Stage",
+	"animalmanager:col-generation": "Gen.",
+	"animalmanager:col-age": "Age",
+	"animalmanager:col-sex": "Sex",
+	"animalmanager:col-breeding": "Breeding",
+	"animalmanager:col-milk": "Milk",
+	"animalmanager:col-eggs": "Eggs",
+	"animalmanager:col-harvest": "Harvest"
+}

@@ -1,0 +1,78 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- .NET 10 is required by Vintage Story 1.22+ (see CLAUDE.md). Do NOT drop to net8.0. -->
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <AssemblyName>animalmanager</AssemblyName>
+    <RootNamespace>AnimalManager</RootNamespace>
+    <!-- Keep in sync with the "version" field in modinfo.json; drives the release zip name. -->
+    <Version>0.1.0</Version>
+    <!-- Silence "missing XML comment" style noise; this is a mod, not a library. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    References are resolved from the game install folder via the VINTAGE_STORY env var
+    (the folder containing VintagestoryAPI.dll, Lib/, Mods/). See CLAUDE.md "Environment
+    prerequisites". <Private>false</Private> keeps the game DLLs OUT of the release zip.
+  -->
+  <ItemGroup>
+    <Reference Include="VintagestoryAPI">
+      <HintPath>$(VINTAGE_STORY)/VintagestoryAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="VintagestoryLib">
+      <HintPath>$(VINTAGE_STORY)/VintagestoryLib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="VSSurvivalMod">
+      <HintPath>$(VINTAGE_STORY)/Mods/VSSurvivalMod.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="VSEssentials">
+      <HintPath>$(VINTAGE_STORY)/Mods/VSEssentials.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(VINTAGE_STORY)/Lib/Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Ship the assets folder (lang files etc.) alongside the compiled dll. -->
+  <ItemGroup>
+    <None Include="assets/**/*" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="modinfo.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!--
+    Self-contained packaging (no Cake dependency): on a Release build, stage the dll +
+    modinfo.json + assets and zip them into ../Releases/animalmanager_<Version>.zip using
+    the built-in MSBuild ZipDirectory task. Drop that zip into your VintagestoryData/Mods
+    folder, or run `dotnet build -c Release`.
+  -->
+  <Target Name="PackageMod" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <PropertyGroup>
+      <StageDir>$(MSBuildProjectDirectory)/obj/package</StageDir>
+      <ReleasesDir>$(MSBuildProjectDirectory)/../Releases</ReleasesDir>
+      <ReleaseZip>$(ReleasesDir)/animalmanager_$(Version).zip</ReleaseZip>
+    </PropertyGroup>
+    <RemoveDir Directories="$(StageDir)" />
+    <MakeDir Directories="$(StageDir);$(ReleasesDir)" />
+    <ItemGroup>
+      <_AssetFiles Include="$(MSBuildProjectDirectory)/assets/**/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_AssetFiles)"
+          DestinationFiles="@(_AssetFiles->'$(StageDir)/assets/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)/modinfo.json" DestinationFolder="$(StageDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(StageDir)" />
+    <Delete Files="$(ReleaseZip)" Condition="Exists('$(ReleaseZip)')" />
+    <ZipDirectory SourceDirectory="$(StageDir)" DestinationFile="$(ReleaseZip)" Overwrite="true" />
+    <Message Importance="high" Text="Packaged mod -> $(ReleaseZip)" />
+  </Target>
+
+</Project>

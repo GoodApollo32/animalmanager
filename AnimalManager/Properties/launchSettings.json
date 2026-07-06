@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "Client": {
+      "commandName": "Executable",
+      "executablePath": "$(VINTAGE_STORY)/Vintagestory",
+      "commandLineArgs": "--tracelog -o AnimalManagerTestWorld --addModPath \"$(ProjectDir)bin/$(Configuration)\"",
+      "comment": "On Windows use Vintagestory.exe. --addModPath loads the freshly built dll+assets without zipping."
+    },
+    "Server": {
+      "commandName": "Executable",
+      "executablePath": "$(VINTAGE_STORY)/VintagestoryServer",
+      "commandLineArgs": "--dataPath ../AnimalManagerServerData --addModPath \"$(ProjectDir)bin/$(Configuration)\"",
+      "comment": "This mod is client-only; the server profile is here only for convenience."
+    }
+  }
+}
