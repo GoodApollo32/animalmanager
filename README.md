@@ -88,8 +88,19 @@ the top of `AnimalStatReader.cs`:
 - **Best-effort (marked "VERIFY"):** hunger/saturation, `animalWeight`, `birthTotalDays`,
   the `multiply` tree (pregnancy/cooldown), milk and egg timers.
 
-If a "VERIFY" column shows `—` on animals that clearly have that stat, confirm the exact
-attribute key against the decompiled game source
-(<https://wiki.vintagestory.at/Modding:Decompiler>) — usually inside the corresponding
-`EntityBehavior*` in `VSSurvivalMod` — and update the single `const string` at the top of
-`AnimalStatReader.cs`. No other code needs to change.
+If a "VERIFY" column shows `—` on animals that clearly have that stat, the fastest way to get
+the real key is the built-in diagnostic command:
+
+```
+.herddump
+```
+
+Stand within 20 blocks of the animal and run it. It writes the nearest animal's attached
+**behaviors** (exact class names) and its **full WatchedAttributes tree** (every key, value,
+and attribute type) to `VintagestoryData/Logs/client-main.log` — search for
+`AnimalManager dump`. Read the real keys straight off that dump and update the single
+`const string` at the top of `AnimalStatReader.cs`; no other code needs to change.
+
+(Alternatively, confirm against the decompiled game source —
+<https://wiki.vintagestory.at/Modding:Decompiler> — usually inside the corresponding
+`EntityBehavior*` in `VSSurvivalMod`.)

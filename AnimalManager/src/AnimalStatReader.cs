@@ -106,10 +106,8 @@ namespace AnimalManager
 
         public static string Health(Entity e)
         {
-            // Prefer the behavior if it is present (most reliable), fall back to the tree.
-            EntityBehaviorHealth bh = e.GetBehavior<EntityBehaviorHealth>();
-            if (bh != null) return Ratio(bh.Health, bh.MaxHealth);
-
+            // Read from the synced "health" tree (currenthealth/maxhealth) rather than the
+            // behavior's public members — the tree keys are stable across versions.
             ITreeAttribute t = e.WatchedAttributes.GetTreeAttribute(KeyHealthTree);
             if (t == null) return Dash;
             return Ratio(t.GetFloat(KeyHealthCurrent), t.GetFloat(KeyHealthMax));

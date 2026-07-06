@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common.Entities;
-using Vintagestory.API.MathTools;
 
 namespace AnimalManager
 {
@@ -59,17 +58,6 @@ namespace AnimalManager
                 capi.Event.UnregisterGameTickListener(tickListenerId);
                 tickListenerId = 0;
             }
-        }
-
-        public override void OnMouseWheel(MouseWheelEventArgs args)
-        {
-            base.OnMouseWheel(args);
-            if (!IsOpened() || rows.Count <= VisibleRows) return;
-
-            int maxOffset = Math.Max(0, rows.Count - VisibleRows);
-            scrollOffset = GameMath.Clamp(scrollOffset - Math.Sign(args.deltaPrecise), 0, maxOffset);
-            Compose();
-            args.SetHandled();
         }
 
         // ====================================================================================
@@ -161,7 +149,7 @@ namespace AnimalManager
                 int first = scrollOffset + 1;
                 int last = scrollOffset + shown;
                 c2.AddSmallButton("▲ Prev", OnPagePrev, ElementBounds.Fixed(0, pagerY, 90, ctrlH));
-                c2.AddStaticText("showing " + first + "–" + last + " of " + rows.Count + "  (scroll to page)",
+                c2.AddStaticText("showing " + first + "–" + last + " of " + rows.Count,
                     infoFont, ElementBounds.Fixed(100, pagerY + 4, contentW - 200, ctrlH));
                 c2.AddSmallButton("Next ▼", OnPageNext, ElementBounds.Fixed(contentW - 90, pagerY, 90, ctrlH));
             }

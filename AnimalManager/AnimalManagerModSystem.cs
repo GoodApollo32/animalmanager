@@ -1,5 +1,7 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
+using Vintagestory.API.MathTools;
 
 namespace AnimalManager
 {
@@ -35,8 +37,35 @@ namespace AnimalManager
                 .HandleWith(_ =>
                 {
                     ToggleDialog();
-                    return Vintagestory.API.Common.TextCommandResult.Success();
+                    return TextCommandResult.Success();
                 });
+
+            // Diagnostic: dump the nearest animal's behaviors + WatchedAttributes to the log so
+            // the exact husbandry attribute keys can be confirmed against a live game.
+            capi.ChatCommands.Create("herddump")
+                .WithDescription("Dump the nearest animal's attributes to client-main.log (for stat-key verification).")
+                .HandleWith(_ => OnDumpCommand());
+        }
+
+        private TextCommandResult OnDumpCommand()
+        {
+            EntityPlayer player = capi.World?.Player?.Entity;
+            if (player == null) return TextCommandResult.Error("No player.");
+
+            Vec3d origin = player.Pos.XYZ;
+            Entity nearest = null;
+            double best = double.MaxValue;
+            foreach (Entity e in capi.World.GetEntitiesAround(origin, 20, 20, AnimalStatReader.IsManageableAnimal))
+            {
+                double d = origin.DistanceTo(e.Pos.XYZ);
+                if (d < best) { best = d; nearest = e; }
+            }
+
+            if (nearest == null) return TextCommandResult.Success("No manageable animal within 20 blocks.");
+
+            capi.Logger.Notification(HerdDump.BuildReport(nearest));
+            return TextCommandResult.Success("Dumped '" + nearest.Code
+                + "' to client-main.log — search for 'AnimalManager dump'.");
         }
 
         private bool OnToggleHotkey(KeyCombination comb)
