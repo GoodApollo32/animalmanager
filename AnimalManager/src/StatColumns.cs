@@ -46,9 +46,9 @@ namespace AnimalManager
             // Vitals
             new StatColumn("health", "Health", StatCategory.Vitals, 70,
                 (e, capi) => AnimalStatReader.Health(e)),
-            new StatColumn("hunger", "Hunger", StatCategory.Vitals, 95,
-                (e, capi) => AnimalStatReader.Hunger(e)),
-            new StatColumn("weight", "Weight", StatCategory.Vitals, 70,
+            // Condition/weight is the husbandry "fed-ness" indicator; animals have no separate
+            // saturation meter, so there is no "hunger" column.
+            new StatColumn("weight", "Condition", StatCategory.Vitals, 80,
                 (e, capi) => AnimalStatReader.Weight(e)),
 
             // Age & domestication

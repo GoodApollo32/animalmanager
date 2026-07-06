@@ -118,16 +118,6 @@ namespace AnimalManager
             return Ratio(t.GetFloat(KeyHealthCurrent), t.GetFloat(KeyHealthMax));
         }
 
-        public static string Hunger(Entity e)
-        {
-            ITreeAttribute t = e.WatchedAttributes.GetTreeAttribute(KeyHungerTree);
-            if (t == null) return Dash;
-            float cur = t.GetFloat(KeyHungerCurrent, -1);
-            float max = t.GetFloat(KeyHungerMax, -1);
-            if (cur < 0 || max <= 0) return Dash;
-            return HungerLabel(cur / max);
-        }
-
         public static string Weight(Entity e)
         {
             float w = e.WatchedAttributes.GetFloat(KeyWeight, -1f);
@@ -167,14 +157,14 @@ namespace AnimalManager
         //  Breeding
         // ================================================================================
 
-        /// <summary>Pregnant / on-cooldown / ready, best-effort from the multiply tree.</summary>
+        /// <summary>Pregnant / on-cooldown / ready, from the synced "multiply" tree.</summary>
         public static string Breeding(Entity e)
         {
-            bool canBreed = e.GetBehavior<EntityBehaviorMultiply>() != null;
-            if (!canBreed) return Dash;
-
+            // Gate on the tree, not the behavior type: egg-layers (e.g. chickens) attach a
+            // different multiply subclass, so GetBehavior<EntityBehaviorMultiply>() misses them
+            // even though the multiply tree — verified present on a chicken-hen — is right here.
             ITreeAttribute t = e.WatchedAttributes.GetTreeAttribute(KeyMultiplyTree);
-            if (t == null) return "—";
+            if (t == null) return Dash;
 
             double now = e.World?.Calendar?.TotalDays ?? 0;
             double pregStart = t.GetDouble(KeyPregnancyStartDays, -1);
@@ -241,18 +231,7 @@ namespace AnimalManager
         private static string Ratio(float cur, float max)
         {
             if (max <= 0) return Dash;
-            return cur.ToString("0") + "/" + max.ToString("0");
-        }
-
-        private static string HungerLabel(float ratio)
-        {
-            if (ratio <= 0.001f) return "Starving";
-            if (ratio < 0.15f) return "Famished";
-            if (ratio < 0.35f) return "Hungry";
-            if (ratio < 0.50f) return "Peckish";
-            if (ratio < 0.80f) return "Not hungry";
-            if (ratio < 1.00f) return "Full";
-            return "Stuffed";
+            return cur.ToString("0.#") + "/" + max.ToString("0.#");
         }
 
         private static bool ContainsToken(string haystack, params string[] tokens)
