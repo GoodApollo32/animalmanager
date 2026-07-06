@@ -57,7 +57,10 @@ namespace AnimalManager
         /// </summary>
         public static bool IsManageableAnimal(Entity e)
         {
-            if (e is not EntityAgent || e is EntityPlayer || !e.Alive) return false;
+            // Note: not naming EntityPlayer here — the runtime source compiler doesn't
+            // reference the assembly that defines it. Players are excluded anyway because they
+            // carry no generation attribute / multiply / grow behavior.
+            if (e is not EntityAgent || !e.Alive) return false;
             return e.WatchedAttributes.HasAttribute(KeyGeneration)
                 || e.GetBehavior<EntityBehaviorMultiply>() != null
                 || e.GetBehavior<EntityBehaviorGrow>() != null;

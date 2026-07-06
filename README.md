@@ -47,29 +47,32 @@ The design is **data-driven**: every stat is a `StatColumn` (id + label + catego
 extractor). The GUI and the config both iterate `StatColumns.All`, so adding a new stat is a
 single entry and it automatically becomes both a table column and a filter toggle.
 
-## Building
+## Running it — two ways
 
-Prerequisites (see `CLAUDE.md`): .NET 10 SDK, and the `VINTAGE_STORY` env var pointing at
-your game install folder (the one with `VintagestoryAPI.dll`, `Lib/`, `Mods/`).
+### A) Source mod (no SDK needed) — simplest
+
+Vintage Story compiles `.cs` mods at load, so you don't need the .NET SDK at all. Requirements
+the game's runtime compiler enforces:
+- All source files must live under **`src/`** (they do).
+- It references the core `VintagestoryAPI` only — so the code avoids types from other game
+  assemblies (e.g. it uses `Entity` rather than `EntityPlayer`).
+
+Put a folder in `VintagestoryData/Mods/` containing just **`modinfo.json` + `src/`**
+(and `assets/` if you want the lang file). The `AnimalManager/` folder in this repo already
+has that layout; copying it in works (extra files like the `.csproj` are ignored).
+
+### B) Precompiled DLL (needs .NET 10 SDK) — most robust
+
+Prerequisites (see `CLAUDE.md`): .NET 10 SDK, and `VINTAGE_STORY` pointing at your game
+install folder (the one with `VintagestoryAPI.dll`, `Lib/`, `Mods/`).
 
 ```bash
-# compile
-dotnet build AnimalManager.sln -c Release
-# -> produces Releases/animalmanager_0.1.0.zip (self-contained MSBuild zip target, no Cake needed)
+dotnet build AnimalManager.sln -c Release   # -> Releases/animalmanager_0.1.0.zip
 ```
-
-Loading options (the mod info is embedded in the assembly via `Properties/AssemblyInfo.cs`,
-so a bare DLL is enough):
-- **Simplest:** drop `AnimalManager/bin/Release/animalmanager.dll` straight into
-  `VintagestoryData/Mods/`. No `modinfo.json` needed next to it — it is baked into the DLL.
-- **Packaged:** drop `Releases/animalmanager_0.1.0.zip` (dll + modinfo.json + assets) into
-  `VintagestoryData/Mods/`.
-- **Dev iteration:** use the **Client** run profile (`launchSettings.json`, `--addModPath`) —
-  no zipping between edits.
-
-> If you prefer the canonical Mod-DB publishing flow, you can also scaffold with
-> `dotnet new vsmod --AddSolutionFile -o AnimalManager` and drop `src/`, `modinfo.json`, and
-> `assets/` into the generated project to get its bundled CakeBuild pipeline.
+Drop `Releases/animalmanager_0.1.0.zip` (dll + **modinfo.json** + assets) into
+`VintagestoryData/Mods/`. A bare `.dll` alone will not load — it needs `modinfo.json`
+alongside it, which the zip provides. Building against the real game DLLs also sidesteps the
+runtime source-compiler's limited reference set.
 
 ## Verifying it works (on your machine — cannot be run in CI without the game)
 

@@ -22,10 +22,11 @@ namespace AnimalManager
         {
             var result = new List<Entity>();
 
-            EntityPlayer player = capi.World?.Player?.Entity;
-            if (player == null) return result;
+            // Avoid naming the EntityPlayer type (its assembly isn't referenced by the
+            // runtime source compiler); the base Entity.Pos is all we need.
+            if (capi.World?.Player?.Entity == null) return result;
 
-            Vec3d pos = player.Pos.XYZ;
+            Vec3d pos = capi.World.Player.Entity.Pos.XYZ;
             float range = config.SearchRadius;
 
             Entity[] found = capi.World.GetEntitiesAround(pos, range, range, e =>

@@ -49,7 +49,9 @@ namespace AnimalManager
 
         private TextCommandResult OnDumpCommand()
         {
-            EntityPlayer player = capi.World?.Player?.Entity;
+            // Don't name EntityPlayer (assembly not referenced by the runtime source
+            // compiler); var keeps it as the inferred type and we only touch the base Pos.
+            var player = capi.World?.Player?.Entity;
             if (player == null) return TextCommandResult.Error("No player.");
 
             Vec3d origin = player.Pos.XYZ;
