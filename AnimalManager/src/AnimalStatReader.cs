@@ -57,13 +57,15 @@ namespace AnimalManager
         /// </summary>
         public static bool IsManageableAnimal(Entity e)
         {
-            // Note: not naming EntityPlayer here — the runtime source compiler doesn't
-            // reference the assembly that defines it. Players are excluded anyway because they
-            // carry no generation attribute / multiply / grow behavior.
+            // Keep this broad: any living creature that isn't a player. The husbandry-specific
+            // signals (generation attribute / multiply behavior) missed many animals —
+            // creative-spawned ones may lack the attribute, and egg-layers use a different
+            // multiply subclass. In practice the creatures around you are your livestock; the
+            // "Domesticated only" filter narrows to generation > 0 when you want that.
+            // (Exclude the player by entity code rather than naming EntityPlayer, whose
+            // assembly the runtime source compiler doesn't reference.)
             if (e is not EntityAgent || !e.Alive) return false;
-            return e.WatchedAttributes.HasAttribute(KeyGeneration)
-                || e.GetBehavior<EntityBehaviorMultiply>() != null
-                || e.GetBehavior<EntityBehaviorGrow>() != null;
+            return e.Code?.Path != "player";
         }
 
         // ================================================================================
