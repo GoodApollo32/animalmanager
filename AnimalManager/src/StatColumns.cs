@@ -50,6 +50,9 @@ namespace AnimalManager
             // saturation meter, so there is no "hunger" column.
             new StatColumn("weight", "Condition", StatCategory.Vitals, 80,
                 (e, capi) => AnimalStatReader.Weight(e)),
+            // Current fullness (goats/pigs); blank on animals without a hunger tree (hens).
+            new StatColumn("satiety", "Satiety", StatCategory.Vitals, 65,
+                (e, capi) => AnimalStatReader.Satiety(e)),
 
             // Age & domestication
             new StatColumn("stage", "Stage", StatCategory.Age, 80,

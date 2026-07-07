@@ -31,20 +31,16 @@ namespace AnimalManager
         private const string KeyHealthMax = "maxhealth";
         private const string KeyNameTagTree = "nametag";
         private const string KeyNameTagName = "name";
-        // Best-effort — VERIFY against decompiled source:
-        private const string KeyHungerTree = "hunger";
-        private const string KeyHungerCurrent = "currentsaturation";
-        private const string KeyHungerMax = "maxsaturation";
-        private const string KeyWeight = "animalWeight";
-        private const string KeyBodyCondition = "bodyCondition";
-        private const string KeyBirthTotalDays = "birthTotalDays";
+        // Verified against live 1.22 dumps (game:chicken-hen + valais/turdag goats):
+        private const string KeyWeight = "animalWeight";                  // top-level float, body condition
+        private const string KeyBirthTotalDays = "birthTotalDays";        // top-level double
+        private const string KeyHungerTree = "hunger";                    // present on goats/pigs, not hens
+        private const string KeyHungerSaturation = "saturation";
         private const string KeyMultiplyTree = "multiply";
+        private const string KeyIsPregnant = "isPregnant";                // bool, set while gestating
         private const string KeyPregnancyStartDays = "totalDaysPregnancyStart";
         private const string KeyCooldownUntilDays = "totalDaysCooldownUntil";
-        private const string KeyGrowStartDays = "grownDaysGrowStarted"; // juvenile growth clock
-        private const string KeyMilkTree = "milkable";
-        private const string KeyLastMilkedDays = "lastMilkedTotalDays";
-        private const string KeyEggLaidDays = "eggLaidTotalDays";
+        private const string KeyLastMilkedHours = "lastMilkedTotalHours";  // top-level float; present == milkable
 
         // ================================================================================
         //  Membership
@@ -121,9 +117,16 @@ namespace AnimalManager
         public static string Weight(Entity e)
         {
             float w = e.WatchedAttributes.GetFloat(KeyWeight, -1f);
-            if (w < 0) w = e.WatchedAttributes.GetFloat(KeyBodyCondition, -1f);
             if (w < 0) return Dash;
             return (w * 100f).ToString("0") + "%";
+        }
+
+        /// <summary>Current fullness from the "hunger" tree (goats/pigs have it, hens don't).</summary>
+        public static string Satiety(Entity e)
+        {
+            ITreeAttribute t = e.WatchedAttributes.GetTreeAttribute(KeyHungerTree);
+            if (t == null || !t.HasAttribute(KeyHungerSaturation)) return Dash;
+            return t.GetFloat(KeyHungerSaturation).ToString("0.#");
         }
 
         // ================================================================================
@@ -166,11 +169,10 @@ namespace AnimalManager
             ITreeAttribute t = e.WatchedAttributes.GetTreeAttribute(KeyMultiplyTree);
             if (t == null) return Dash;
 
-            double now = e.World?.Calendar?.TotalDays ?? 0;
-            double pregStart = t.GetDouble(KeyPregnancyStartDays, -1);
-            double cooldown = t.GetDouble(KeyCooldownUntilDays, -1);
+            if (IsPregnantTree(t)) return "Pregnant";
 
-            if (pregStart > 0) return "Pregnant";
+            double now = e.World?.Calendar?.TotalDays ?? 0;
+            double cooldown = t.GetDouble(KeyCooldownUntilDays, -1);
             if (cooldown > now) return "CD " + (cooldown - now).ToString("0.0") + "d";
             return "Ready";
         }
@@ -178,7 +180,15 @@ namespace AnimalManager
         public static bool IsPregnant(Entity e)
         {
             ITreeAttribute t = e.WatchedAttributes.GetTreeAttribute(KeyMultiplyTree);
-            return t != null && t.GetDouble(KeyPregnancyStartDays, -1) > 0;
+            return t != null && IsPregnantTree(t);
+        }
+
+        // Confirmed on live goats: a gestating female carries multiply.isPregnant = true
+        // (alongside totalDaysPregnancyStart, kept as a fallback).
+        private static bool IsPregnantTree(ITreeAttribute multiply)
+        {
+            return multiply.GetBool(KeyIsPregnant, false)
+                || multiply.GetDouble(KeyPregnancyStartDays, -1) > 0;
         }
 
         public static bool IsReadyToBreed(Entity e)
@@ -194,16 +204,20 @@ namespace AnimalManager
         //  Products & timers
         // ================================================================================
 
+        // Milk cooldown in in-game hours (goats/cows are milkable once per day).
+        private const double MilkCooldownHours = 24;
+
         public static string Milk(Entity e)
         {
-            if (e.GetBehavior<EntityBehaviorMilkable>() == null) return Dash;
-            ITreeAttribute t = e.WatchedAttributes.GetTreeAttribute(KeyMilkTree);
-            double last = t?.GetDouble(KeyLastMilkedDays, -1)
-                          ?? e.WatchedAttributes.GetDouble(KeyLastMilkedDays, -1);
-            if (last < 0) return "Milkable";
-            double now = e.World?.Calendar?.TotalDays ?? last;
-            double sinceHours = (now - last) * (e.World?.Calendar?.HoursPerDay ?? 24);
-            return sinceHours >= 24 ? "Ready" : "in " + (24 - sinceHours).ToString("0") + "h";
+            // Milkable animals (goats confirmed) carry a top-level "lastMilkedTotalHours" float;
+            // hens don't have it. 0 == never milked == ready now.
+            if (!e.WatchedAttributes.HasAttribute(KeyLastMilkedHours)) return Dash;
+            float last = e.WatchedAttributes.GetFloat(KeyLastMilkedHours, 0);
+            if (last <= 0) return "Ready";
+
+            double nowHours = (e.World?.Calendar?.TotalDays ?? 0) * (e.World?.Calendar?.HoursPerDay ?? 24);
+            double since = nowHours - last;
+            return since >= MilkCooldownHours ? "Ready" : "in " + (MilkCooldownHours - since).ToString("0") + "h";
         }
 
         public static string Eggs(Entity e)
