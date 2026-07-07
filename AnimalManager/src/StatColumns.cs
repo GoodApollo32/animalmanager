@@ -43,37 +43,37 @@ namespace AnimalManager
         /// <summary>The full column registry, in display order.</summary>
         public static readonly IReadOnlyList<StatColumn> All = new List<StatColumn>
         {
-            // Vitals
-            new StatColumn("health", "Health", StatCategory.Vitals, 70,
+            // Vitals  (widths give each header word room so it never breaks mid-letter)
+            new StatColumn("health", "Health", StatCategory.Vitals, 66,
                 (e, capi) => AnimalStatReader.Health(e)),
             // Condition/weight is the husbandry "fed-ness" indicator; animals have no separate
             // saturation meter, so there is no "hunger" column.
-            new StatColumn("weight", "Condition", StatCategory.Vitals, 80,
+            new StatColumn("weight", "Condition", StatCategory.Vitals, 86,
                 (e, capi) => AnimalStatReader.Weight(e)),
             // Current fullness (goats/pigs); blank on animals without a hunger tree (hens).
-            new StatColumn("satiety", "Satiety", StatCategory.Vitals, 65,
+            new StatColumn("satiety", "Satiety", StatCategory.Vitals, 70,
                 (e, capi) => AnimalStatReader.Satiety(e)),
 
             // Age & domestication
-            new StatColumn("stage", "Stage", StatCategory.Age, 80,
+            new StatColumn("stage", "Stage", StatCategory.Age, 78,
                 (e, capi) => AnimalStatReader.Stage(e)),
-            new StatColumn("generation", "Gen.", StatCategory.Age, 70,
+            new StatColumn("generation", "Gen.", StatCategory.Age, 64,
                 (e, capi) => AnimalStatReader.GenerationLabel(e)),
-            new StatColumn("age", "Age", StatCategory.Age, 60,
+            new StatColumn("age", "Age", StatCategory.Age, 56,
                 (e, capi) => AnimalStatReader.Age(e)),
 
             // Breeding
-            new StatColumn("sex", "Sex", StatCategory.Breeding, 45,
+            new StatColumn("sex", "Sex", StatCategory.Breeding, 46,
                 (e, capi) => AnimalStatReader.Sex(e)),
-            new StatColumn("breeding", "Breeding", StatCategory.Breeding, 95,
+            new StatColumn("breeding", "Breeding", StatCategory.Breeding, 90,
                 (e, capi) => AnimalStatReader.Breeding(e)),
 
             // Products & timers
-            new StatColumn("milk", "Milk", StatCategory.Products, 70,
+            new StatColumn("milk", "Milk", StatCategory.Products, 66,
                 (e, capi) => AnimalStatReader.Milk(e)),
-            new StatColumn("eggs", "Eggs", StatCategory.Products, 60,
+            new StatColumn("eggs", "Eggs", StatCategory.Products, 58,
                 (e, capi) => AnimalStatReader.Eggs(e)),
-            new StatColumn("harvest", "Harvest", StatCategory.Products, 70,
+            new StatColumn("harvest", "Harvest", StatCategory.Products, 76,
                 (e, capi) => AnimalStatReader.Harvest(e)),
         };
 

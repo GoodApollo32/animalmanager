@@ -107,7 +107,9 @@ namespace AnimalManager
             ElementBounds bgBounds = ElementBounds.Fill.WithFixedPadding(GuiStyle.ElementToDialogPadding);
             bgBounds.BothSizing = ElementSizing.FitToChildren;
 
-            CairoFont headerFont = CairoFont.WhiteSmallishText().WithWeight(Cairo.FontWeight.Bold);
+            // Non-bold header font: bold is wider and VS breaks a header word mid-letter when
+            // it overflows its column, spilling onto the first data row.
+            CairoFont headerFont = CairoFont.WhiteSmallText();
             CairoFont cellFont = CairoFont.WhiteSmallText();
             CairoFont infoFont = CairoFont.WhiteDetailText();
 

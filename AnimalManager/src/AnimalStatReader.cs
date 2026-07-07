@@ -40,7 +40,8 @@ namespace AnimalManager
         private const string KeyIsPregnant = "isPregnant";                // bool, set while gestating
         private const string KeyPregnancyStartDays = "totalDaysPregnancyStart";
         private const string KeyCooldownUntilDays = "totalDaysCooldownUntil";
-        private const string KeyLastMilkedHours = "lastMilkedTotalHours";  // top-level float; present == milkable
+        private const string KeyLastBirthDays = "totalDaysLastBirth";     // -9999 == never calved
+        private const string KeyLastMilkedHours = "lastMilkedTotalHours";  // top-level float; dairy species only
 
         // ================================================================================
         //  Membership
@@ -149,8 +150,10 @@ namespace AnimalManager
 
         public static string Age(Entity e)
         {
-            double birth = e.WatchedAttributes.GetDouble(KeyBirthTotalDays, -1);
-            if (birth < 0) return Dash;
+            // birthTotalDays can be negative (animals spawned/imported "before" day 0), so test
+            // for the attribute's presence rather than a negative-means-missing sentinel.
+            if (!e.WatchedAttributes.HasAttribute(KeyBirthTotalDays)) return Dash;
+            double birth = e.WatchedAttributes.GetDouble(KeyBirthTotalDays);
             double days = (e.World?.Calendar?.TotalDays ?? birth) - birth;
             if (days < 0) return Dash;
             return days < 1 ? "<1d" : days.ToString("0") + "d";
@@ -209,14 +212,20 @@ namespace AnimalManager
 
         public static string Milk(Entity e)
         {
-            // Milkable animals (goats confirmed) carry a top-level "lastMilkedTotalHours" float;
-            // hens don't have it. 0 == never milked == ready now.
+            // Dairy species (goats/cows confirmed) carry a top-level "lastMilkedTotalHours";
+            // hens don't have it at all -> not a dairy animal.
             if (!e.WatchedAttributes.HasAttribute(KeyLastMilkedHours)) return Dash;
-            float last = e.WatchedAttributes.GetFloat(KeyLastMilkedHours, 0);
-            if (last <= 0) return "Ready";
 
+            // A doe only lactates after giving birth. multiply.totalDaysLastBirth == -9999 (or
+            // <= 0) means she has never calved, so she cannot be milked yet -> "Dry".
+            ITreeAttribute m = e.WatchedAttributes.GetTreeAttribute(KeyMultiplyTree);
+            double lastBirth = m?.GetDouble(KeyLastBirthDays, -9999) ?? -9999;
+            if (lastBirth <= 0) return "Dry";
+
+            // Lactating: ready unless still within the post-milking cooldown.
+            float lastMilked = e.WatchedAttributes.GetFloat(KeyLastMilkedHours, 0);
             double nowHours = (e.World?.Calendar?.TotalDays ?? 0) * (e.World?.Calendar?.HoursPerDay ?? 24);
-            double since = nowHours - last;
+            double since = nowHours - lastMilked;
             return since >= MilkCooldownHours ? "Ready" : "in " + (MilkCooldownHours - since).ToString("0") + "h";
         }
 
