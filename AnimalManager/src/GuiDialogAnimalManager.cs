@@ -67,9 +67,23 @@ namespace AnimalManager
             var list = new List<StatColumn>();
             foreach (StatColumn c in StatColumns.All)
             {
-                if (config.IsColumnVisible(c.Id)) list.Add(c);
+                if (!config.IsColumnVisible(c.Id)) continue;              // user-hidden
+                if (config.HideEmptyColumns && !AnyRowHasData(c)) continue; // no animal in range has this stat
+                list.Add(c);
             }
             return list;
+        }
+
+        // A column is "empty" when every animal currently in range reads "—" for it, e.g. Milk
+        // when only chickens are nearby. Such columns are dropped so the view adapts to the herd.
+        private bool AnyRowHasData(StatColumn c)
+        {
+            foreach (Entity e in rows)
+            {
+                string v = SafeRead(c, e);
+                if (!string.IsNullOrEmpty(v) && v != AnimalStatReader.Dash) return true;
+            }
+            return false;
         }
 
         private void Compose()
@@ -213,10 +227,13 @@ namespace AnimalManager
                 ElementBounds.Fixed(x, y, switchSize, switchSize), "flt-ready", switchSize);
             c.AddStaticText("Ready to breed", label, ElementBounds.Fixed(x + 28, y + 3, 130, 24));
 
-            // --- radius slider ---
+            // --- radius slider + auto-hide toggle ---
             double ry = y + 34;
             c.AddStaticText("Radius", label, ElementBounds.Fixed(0, ry + 3, 60, 24));
             c.AddSlider(OnRadiusChanged, ElementBounds.Fixed(64, ry, 220, 24), "flt-radius");
+            c.AddSwitch(OnHideEmptyToggle,
+                ElementBounds.Fixed(300, ry, switchSize, switchSize), "flt-hideempty", switchSize);
+            c.AddStaticText("Auto-hide empty columns", label, ElementBounds.Fixed(328, ry + 3, 220, 24));
 
             // --- column toggles, grouped by category ---
             double cy = ry + 30;
@@ -243,6 +260,7 @@ namespace AnimalManager
             SetSwitch("flt-pregnant", config.OnlyPregnant);
             SetSwitch("flt-ready", config.OnlyReadyToBreed);
             SingleComposer.GetSlider("flt-radius")?.SetValues(config.SearchRadius, 4, 64, 1, " blocks");
+            SetSwitch("flt-hideempty", config.HideEmptyColumns);
             foreach (StatColumn col in StatColumns.All)
             {
                 SetSwitch("col-" + col.Id, config.IsColumnVisible(col.Id));
@@ -292,6 +310,13 @@ namespace AnimalManager
             saveConfig();
             Compose();
             return true;
+        }
+
+        private void OnHideEmptyToggle(bool on)
+        {
+            config.HideEmptyColumns = on;
+            saveConfig();
+            Compose();
         }
 
         private bool OnPagePrev()

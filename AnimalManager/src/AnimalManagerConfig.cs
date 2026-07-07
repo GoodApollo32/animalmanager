@@ -32,6 +32,13 @@ namespace AnimalManager
         /// <summary>Whether the in-dialog filter/settings panel is expanded.</summary>
         public bool ShowFilterPanel = false;
 
+        /// <summary>
+        /// Auto-hide any column for which no animal currently in range has a value (e.g. Milk
+        /// when only chickens are nearby). User column hides in <see cref="HiddenColumns"/> still
+        /// apply on top of this.
+        /// </summary>
+        public bool HideEmptyColumns = true;
+
         public bool IsColumnVisible(string id)
         {
             return HiddenColumns == null || !HiddenColumns.Contains(id);
