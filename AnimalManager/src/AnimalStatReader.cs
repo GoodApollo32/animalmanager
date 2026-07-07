@@ -79,7 +79,20 @@ namespace AnimalManager
             if (!string.IsNullOrEmpty(custom)) return custom;
 
             string name = e.GetName();
-            return string.IsNullOrEmpty(name) ? Species(e) : name;
+            return string.IsNullOrEmpty(name) ? Species(e) : StripSexSuffix(name);
+        }
+
+        // The auto-generated name embeds sex, e.g. "Valais goat (female)". The Sex column
+        // already shows that, so trim it to keep the Animal column short (English names only;
+        // other locales keep the full name and rely on the widened column).
+        private static string StripSexSuffix(string name)
+        {
+            foreach (string suffix in new[] { " (female)", " (male)" })
+            {
+                if (name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                    return name.Substring(0, name.Length - suffix.Length);
+            }
+            return name;
         }
 
         /// <summary>Short species label derived from the entity code, e.g. "sheep-bighorn".</summary>

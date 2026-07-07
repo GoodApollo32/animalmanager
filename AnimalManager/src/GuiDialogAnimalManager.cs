@@ -15,7 +15,7 @@ namespace AnimalManager
         private const double TitleH = 30;
         private const double RowH = 24;
         private const double HeaderH = 26;
-        private const double NameW = 155;
+        private const double NameW = 200;
         private const double CellGap = 6;
         private const double MinContentW = 380;
 
@@ -166,7 +166,7 @@ namespace AnimalManager
         {
             // Name / header-label for the first (Animal) column.
             string nameText = e == null ? "Animal" : AnimalStatReader.DisplayName(e);
-            c.AddStaticText(Clip(nameText, 24), font, ElementBounds.Fixed(0, y + 3, NameW, RowH));
+            c.AddStaticText(Clip(nameText, 26), font, ElementBounds.Fixed(0, y + 3, NameW, RowH));
 
             double x = NameW;
             foreach (StatColumn col in cols)
