@@ -176,9 +176,17 @@ namespace AnimalManager
         //  Breeding
         // ================================================================================
 
+        // Hens lay eggs; their reproduction is reported in the Eggs column instead of Breeding.
+        private static bool IsEggLayer(Entity e)
+        {
+            return ContainsToken((e.Code?.Path ?? "").ToLowerInvariant(), "hen");
+        }
+
         /// <summary>Pregnant / on-cooldown / ready, from the synced "multiply" tree.</summary>
         public static string Breeding(Entity e)
         {
+            if (IsEggLayer(e)) return Dash; // egg-layers report via the Eggs column
+
             // Gate on the tree, not the behavior type: egg-layers (e.g. chickens) attach a
             // different multiply subclass, so GetBehavior<EntityBehaviorMultiply>() misses them
             // even though the multiply tree — verified present on a chicken-hen — is right here.
@@ -244,12 +252,16 @@ namespace AnimalManager
 
         public static string Eggs(Entity e)
         {
-            // Vanilla egg-layers are chickens/hens; detect by code rather than depending on a
-            // specific behavior type name. (Best-effort — the egg timer key is unverified.)
-            string p = (e.Code?.Path ?? "").ToLowerInvariant();
-            if (!ContainsToken(p, "chicken", "hen", "rooster", "cockerel")) return Dash;
-            if (ContainsToken(p, "rooster", "cockerel", "cock")) return Dash; // males don't lay
-            return "Layer";
+            if (!IsEggLayer(e)) return Dash;
+
+            // There is no synced per-egg countdown (routine laying is computed server-side from
+            // food/time). The multiply cooldown is the hen's reproduction-readiness signal, so
+            // surface that: "Ready" == can lay/breed now, otherwise the days remaining.
+            ITreeAttribute t = e.WatchedAttributes.GetTreeAttribute(KeyMultiplyTree);
+            if (t == null) return "Layer";
+            double now = e.World?.Calendar?.TotalDays ?? 0;
+            double cooldown = t.GetDouble(KeyCooldownUntilDays, -1);
+            return cooldown > now ? "in " + (cooldown - now).ToString("0.0") + "d" : "Ready";
         }
 
         public static string Harvest(Entity e)
