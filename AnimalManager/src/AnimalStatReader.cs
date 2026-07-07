@@ -207,12 +207,12 @@ namespace AnimalManager
             return t != null && IsPregnantTree(t);
         }
 
-        // Confirmed on live goats: a gestating female carries multiply.isPregnant = true
-        // (alongside totalDaysPregnancyStart, kept as a fallback).
+        // Use only multiply.isPregnant — it resets to false at birth. totalDaysPregnancyStart
+        // is NOT cleared after birth, so testing it caused does to read "Pregnant" even once
+        // they had calved and were ready to mate again.
         private static bool IsPregnantTree(ITreeAttribute multiply)
         {
-            return multiply.GetBool(KeyIsPregnant, false)
-                || multiply.GetDouble(KeyPregnancyStartDays, -1) > 0;
+            return multiply.GetBool(KeyIsPregnant, false);
         }
 
         public static bool IsReadyToBreed(Entity e)
